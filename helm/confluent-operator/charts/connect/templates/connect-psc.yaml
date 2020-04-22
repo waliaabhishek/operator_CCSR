@@ -55,13 +55,27 @@ spec:
           {{- end }}
           confluent.topic.replication.factor={{ include  "confluent-operator.replication_count" $ }}
           group.id={{ $.Release.Namespace }}.{{ $.Values.name }}
+
+          # Start Addon for Schema Registry for CCloud
+          {{- if .Values.dependencies.schemaRegistry.ccloud.enabled }}
+          key.converter=io.confluent.connect.avro.AvroConverter
+          value.converter=io.confluent.connect.avro.AvroConverter
+          key.converter.basic.auth.credentials.source= {{ .Values.dependencies.schemaRegistry.ccloud.basic.auth.source }}
+          key.converter.basic.auth.user.info= {{ $.Values.dependencies.schemaRegistry.ccloud.basic.auth.username }}:{{ $.Values.dependencies.schemaRegistry.ccloud.basic.auth.password }}
+          value.converter.basic.auth.credentials.source= {{ .Values.dependencies.schemaRegistry.ccloud.basic.auth.source }}
+          value.converter.basic.auth.user.info= {{ $.Values.dependencies.schemaRegistry.ccloud.basic.auth.username }}:{{ $.Values.dependencies.schemaRegistry.ccloud.basic.auth.password }}
+          {{- else }}
           key.converter={{ $.Values.key.converter }}
           value.converter={{ $.Values.value.converter }}
+          {{- end }}
           {{- if .Values.dependencies.schemaRegistry.enabled }}
-          {{- $_ := required "requires schemaregistry url" .Values.dependencies.schemaRegistry.url }}
+          {{- $_ := required "requires schemaRegistry url" .Values.dependencies.schemaRegistry.url }}
           key.converter.schema.registry.url={{ .Values.dependencies.schemaRegistry.url }}
           value.converter.schema.registry.url={{ .Values.dependencies.schemaRegistry.url }}
+          schema.registry.url={{ .Values.dependencies.schemaRegistry.url }}
           {{- end }}
+
+          # End Addon for Schema Registry for CCloud
           {{- if $.Values.schemas.enabled }}
           key.converter.schemas.enable=true
           value.converter.schemas.enable=true
@@ -70,12 +84,14 @@ spec:
           value.converter.schemas.enable=false
           {{- end }}
           
-          offset.storage.topic={{ $.Release.Namespace }}.{{ $.Values.name }}-offsets
-          offset.storage.replication.factor={{ include  "confluent-operator.replication_count" $ }}
           config.storage.topic={{ $.Release.Namespace }}.{{ $.Values.name }}-configs
           config.storage.replication.factor={{ include  "confluent-operator.replication_count" $ }}
+          config.storage.partitions=1
+          offset.storage.topic={{ $.Release.Namespace }}.{{ $.Values.name }}-offsets
+          offset.storage.replication.factor={{ include  "confluent-operator.replication_count" $ }}
+          offset.storage.partitions=50
           status.storage.topic={{ $.Release.Namespace }}.{{ $.Values.name }}-status
-          status.storage.replication.factor={{ include  "confluent-operator.replication_count" $ }}
+          status.storage.partitions=10
 
           offset.flush.interval.ms=10000
           plugin.path=/usr/share/java,/usr/share/confluent-hub-components

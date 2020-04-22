@@ -9,7 +9,7 @@ global:
          ## If kubernetes is deployed in multi zone mode then specify availability-zones as appropriate
          ## If kubernetes is deployed in single availability zone then specify appropriate values
          zones:
-          - us-central1-a
+          - us-central1-c
     storage:
       ## https://kubernetes.io/docs/concepts/storage/storage-classes/#gce
       ##
@@ -18,6 +18,8 @@ global:
       reclaimPolicy: Delete
       parameters:
         type: pd-ssd
+        fstype: ext4
+        replication-type: none
     ## Docker registry endpoint where Confluent Images are available.
     ##
     registry:
@@ -26,8 +28,8 @@ global:
         required: false
   sasl:
     plain:
-      username: test
-      password: test123
+      username: "CCLOUD KEY"
+      password: "CCLOUD SECRET"
 
 ## Zookeeper cluster
 ##
@@ -63,25 +65,39 @@ kafka:
 ##
 connect:
   name: connectors
-  replicas: 2
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 2Gi
   tls:
     enabled: false
-    ## "" for none, "tls" for mutual auth
-    authentication:
-      type: ""
-    fullchain: |-
-    privkey: |-
-    cacerts: |-
   loadBalancer:
-    enabled: false
-    domain: ""
+    enabled: true
+    domain: "ps.abhishek.test"
+  disableHostPort: true
+  schemas:
+    enabled: true
   dependencies:
     kafka:
-      bootstrapEndpoint: kafka:9071
-      brokerCount: 3
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: "plain"
+      brokerCount: 0
+      bootstrapEndpoint: "CCLOUD BROKER URL"
     schemaRegistry:
       enabled: true
-      url: http://schemaregistry:8081
+      url: "SR CCLOUD URL"
+      ccloud:
+        enabled: true
+        basic:
+          auth:
+            source: USER_INFO
+            username: "SR API KEY"
+            password: "SR API SECRET"
+
 ## Replicator Connect Cluster
 ##
 replicator:
@@ -158,34 +174,41 @@ controlcenter:
   ##
   ## C3 dependencies
   ##
+  resources:
+    requests:
+      cpu: 200m
+      memory: 4Gi
   dependencies:
     c3KafkaCluster:
-      brokerCount: 3
-      bootstrapEndpoint: kafka:9071
-      zookeeper:
-        endpoint: zookeeper:2181
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: "plain"
+      brokerCount: 0
+      bootstrapEndpoint: "CCLOUD BROKER URL"
     connectCluster:
       enabled: true
       url: http://connectors:8083
     ksql:
-      enabled: true
+      enabled: false
       url: http://ksql:9088
     schemaRegistry:
-      enabled: true
+      enabled: false
       url: http://schemaregistry:8081
   ##
   ## C3 External Access
   ##
   loadBalancer:
     enabled: false
-    domain: ""
+    domain: "ps.abhishek.test"
   ##
   ## TLS configuration
   ##
   tls:
     enabled: false
     authentication:
-      type: ""
+      type: "plain"
     fullchain: |-
     privkey: |-
     cacerts: |-

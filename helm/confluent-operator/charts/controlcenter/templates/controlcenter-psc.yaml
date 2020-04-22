@@ -1,6 +1,5 @@
 {{- $_ := required "Namespace is required" .Release.Namespace }}
 {{- $_ := required "Kafka Cluster Bootstrap Endpoint is required." .Values.dependencies.c3KafkaCluster.bootstrapEndpoint }}
-{{- $_ := required "Zookeeper Cluster endpoint name." .Values.dependencies.c3KafkaCluster.zookeeper.endpoint }}
 {{- $_ := required "Name of controlcenter is required." .Values.name }}
 {{- $_ := required "Docker Repository FQDN path is required" .Values.global.provider.registry.fqdn }}
 {{- $_ := set $ "kreplicas" .Values.dependencies.c3KafkaCluster.brokerCount }}
@@ -32,12 +31,12 @@ spec:
           # control-center configuration
           confluent.controlcenter.rest.authentication.skip.paths=/2.0/status/app_info
           bootstrap.servers={{ $.Values.dependencies.c3KafkaCluster.bootstrapEndpoint }}
-          zookeeper.connect={{ $.Values.dependencies.c3KafkaCluster.zookeeper.endpoint }}
           confluent.license={{ $.Values.license }}
           {{- include "c3.monitoring-clusters" .  | indent 10 }}
           confluent.controlcenter.data.dir=/mnt/data/data0
           confluent.controlcenter.name=_confluent-controlcenter
           confluent.controlcenter.disk.skew.warning.min.bytes=1073741824
+          confluent.metrics.topic.max.message.bytes=8388608
       - name: monitoring-interceptor-topic.properties
         value: |2
           # Monitoring interceptor configuration
@@ -212,9 +211,6 @@ spec:
           confluent.controlcenter.connect.cluster={{- $.Values.dependencies.connectCluster.url }}
           {{- if  $.Values.dependencies.connectCluster.kafkaBootstrapEndpoint }}
           confluent.controlcenter.connect.bootstrap.servers={{- $.Values.dependencies.connectCluster.kafkaBootstrapEndpoint }}
-          {{- end }}
-          {{- if  $.Values.dependencies.connectCluster.zookeeperEndpoint }}
-          confluent.controlcenter.connect.zookeeper.connect={{- $.Values.dependencies.connectCluster.zookeeperEndpoint }}
           {{- end }}
           confluent.controlcenter.connect.timeout.ms={{- $.Values.dependencies.connectCluster.timeout }}
           {{- end }}
