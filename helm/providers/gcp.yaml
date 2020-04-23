@@ -78,6 +78,10 @@ connect:
   disableHostPort: true
   schemas:
     enabled: true
+  key:
+    converter: io.confluent.connect.avro.AvroConverter
+  value:
+    converter: io.confluent.connect.avro.AvroConverter
   dependencies:
     kafka:
       tls:
@@ -90,13 +94,11 @@ connect:
     schemaRegistry:
       enabled: true
       url: "SR CCLOUD URL"
-      ccloud:
-        enabled: true
-        basic:
-          auth:
-            source: USER_INFO
-            username: "SR API KEY"
-            password: "SR API SECRET"
+      authentication:
+        type: basic
+        source: USER_INFO
+        username: "SR API KEY"
+        password: "SR API SECRET"
 
 ## Replicator Connect Cluster
 ##
